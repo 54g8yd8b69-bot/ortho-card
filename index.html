@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Ortho Card</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Carlito:wght@400;700&display=swap">
+<style>
+/* Layout: three-pane workbench — tool palette | the lab card (paper, always white) | prescription & notes */
+:root{
+  --bg:#ECF1F4; --surface:#FFFFFF; --raised:#F5F8FA; --ink:#0B2E4A; --muted:#566F84; --line:#D2DDE5;
+  --accent:#1C7293; --accent-2:#3FA9A0; --accent-soft:#E0EFF3; --danger:#B8323C; --paper:#FFFFFF;
+  --shadow:0 1px 2px rgba(11,46,74,.06),0 10px 28px rgba(11,46,74,.09);
+  --f-display:'Caladea',Cambria,Georgia,serif;
+  --f-body:'Carlito',Calibri,'Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#08151F; --surface:#0F2333; --raised:#132B3E; --ink:#E2ECF2; --muted:#93AABB; --line:#21405A;
+  --accent:#55B6D2; --accent-2:#5CC6BA; --accent-soft:#143A4E; --danger:#E3707A; --paper:#FFFFFF;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08151F; --surface:#0F2333; --raised:#132B3E; --ink:#E2ECF2; --muted:#93AABB; --line:#21405A;
+  --accent:#55B6D2; --accent-2:#5CC6BA; --accent-soft:#143A4E; --danger:#E3707A; --paper:#FFFFFF;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35); color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;padding-block:14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand h1{font-size:24px;font-weight:700;letter-spacing:.2px}
+.brand small{color:var(--muted);font-size:13px;display:block;margin-top:-2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--raised)}
+.seg button{border:0;background:transparent;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:700;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.07)}
+.bar-group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select.btn{padding-right:8px}
+
+.app{display:grid;grid-template-columns:228px minmax(0,1fr) 340px;gap:20px;max-width:1500px;margin:0 auto;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:1200px){.app{grid-template-columns:210px minmax(0,1fr)}.rx{grid-column:1/-1}}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr)}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.tools{padding:14px;display:flex;flex-direction:column;gap:14px;align-self:start}
+.tools h3,.rx h3{font-family:var(--f-body);font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;margin-bottom:6px}
+.tgrid{display:grid;grid-template-columns:1fr;gap:4px}
+@media (max-width:760px){.tgrid{grid-template-columns:1fr 1fr}}
+.tool{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;background:transparent;
+  border-radius:8px;padding:6px 8px;cursor:pointer;line-height:1.2}
+.tool:hover{background:var(--raised)}
+.tool svg{flex:none;width:22px;height:22px;color:var(--accent)}
+.tool[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.tool .on{margin-left:auto;font-size:11px;font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:.06em}
+.opts{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:8px;background:var(--raised);border:1px solid var(--line)}
+.opts label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.opts select{border:1px solid var(--line);border-radius:6px;padding:5px;background:var(--surface)}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+
+.board{display:flex;flex-direction:column;gap:10px;min-width:0}
+.paper{background:var(--paper);color:#0B2E4A;border-radius:6px;box-shadow:var(--shadow);border:1px solid #D7E0E7;
+  padding:16px 18px 12px;display:flex;flex-direction:column;gap:6px}
+.paper-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:1.5px solid #0B2E4A;padding-bottom:6px}
+.paper-head h2{font-size:19px;color:#0B2E4A}
+.paper-head span{font-size:12.5px;color:#566F84}
+#card.tall{max-height:none}
+#card{width:100%;max-height:74vh;display:block;margin:0 auto;touch-action:manipulation}
+#card .tooth{cursor:pointer}
+#card .tooth.ok .tshape{fill:#E2F2F3}
+#card .tooth:hover .tshape{fill:#CDE8EC}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:#566F84;border-top:1px solid #E1E8EE;padding-top:8px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.hint{margin:0;font-size:14px;color:var(--muted);min-height:1.45em}
+.hint b{color:var(--ink)}
+.hint.warn{color:var(--danger)}
+
+.rx{padding:16px;display:flex;flex-direction:column;gap:18px;align-self:start}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field label{font-size:12.5px;color:var(--muted);font-weight:700}
+.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:7px;padding:7px 9px;background:var(--raised);width:100%}
+.field textarea{resize:vertical;min-height:64px}
+fieldset.cb{border:1px solid var(--line);border-radius:8px;padding:8px 10px 10px;margin:0}
+fieldset.cb legend{font-size:12.5px;font-weight:700;color:var(--accent);padding:0 4px}
+.dlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.dlist li{display:flex;align-items:center;gap:10px;padding:7px 10px;border-top:1px solid var(--line);font-size:14px}
+.dlist li:first-child{border-top:0}
+.dlist .tag{font-variant-numeric:tabular-nums;color:var(--muted);margin-left:auto;white-space:nowrap}
+.dlist button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:17px;line-height:1;padding:2px 4px;border-radius:4px}
+.dlist button:hover{color:var(--danger);background:var(--raised)}
+.dlist select.mini{border:1px solid var(--line);border-radius:6px;padding:2px 4px;font-size:13px;background:var(--raised);font-variant-numeric:tabular-nums}
+.dlist li.sub{background:var(--raised);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:5px 10px}
+.dlist .empty{color:var(--muted);font-style:italic}
+pre.notes{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--f-body);font-size:13.5px;background:var(--raised);
+  border:1px solid var(--line);border-radius:8px;padding:10px 12px;max-height:260px;overflow:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.small{font-size:12.5px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);
+  padding:9px 16px;border-radius:8px;font-weight:700;box-shadow:var(--shadow);z-index:30;max-width:calc(100% - 32px)}
+.modal{position:fixed;inset:0;background:rgba(5,18,28,.6);display:flex;align-items:center;justify-content:center;z-index:40;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal .box{background:var(--surface);border-radius:12px;padding:16px;max-width:900px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.modal img{border:1px solid var(--line);border-radius:6px;width:100%;height:auto;background:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="7" fill="#0B2E4A"/><path d="M8 25 C8 12 12 8 17 8 S26 12 26 25" fill="none" stroke="#3FA9A0" stroke-width="2.4" stroke-linecap="round"/><path d="M11 23 L13 19 L14.5 22 H19.5 L21 19 L23 23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div><h1>Ortho Card</h1><small>Removable orthodontic appliance design</small></div>
+  </div>
+  <div class="seg" role="group" aria-label="Arch">
+    <button id="archU" aria-pressed="true">Upper</button><button id="archL" aria-pressed="false">Lower</button><button id="archB" aria-pressed="false">Both</button>
+  </div>
+  <div class="bar-group">
+    <select id="tpl" class="btn" aria-label="Start from a template">
+      <option value="">Start from a template…</option>
+    </select>
+    <button id="undo" class="btn" title="Undo (Ctrl+Z)">Undo</button>
+    <button id="clear" class="btn">Clear</button>
+    <button id="preview" class="btn">Preview image</button>
+    <button id="copyImg" class="btn primary">Copy image</button>
+  </div>
+</header>
+
+<main class="app">
+  <aside class="tools panel" aria-label="Components" id="tools"></aside>
+
+  <section class="board">
+    <div class="paper">
+      <div class="paper-head"><h2 id="applName">Upper removable appliance</h2><span id="paperMeta">Occlusal view · patient's right on the left</span></div>
+      <svg id="card" viewBox="-14 0 428 480" role="img" aria-label="Appliance design on an occlusal arch chart"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="width:22px;height:3px;background:#0B2E4A;border-radius:2px"></i>Wire</span>
+        <span><i style="width:16px;height:11px;background:rgba(194,65,75,.12);border:1.5px solid #C2414B;border-radius:3px"></i>Acrylic</span>
+        <span><i style="width:16px;height:11px;border:1.5px solid #C2414B;background:repeating-linear-gradient(45deg,#C2414B 0 1.3px,transparent 1.3px 4px)"></i>Bite plane</span>
+        <span><i style="width:16px;height:11px;background:rgba(194,65,75,.25);border:1.5px solid #C2414B;border-radius:3px"></i>Bite block</span>
+        <span><i style="width:22px;height:3px;background:#1C7293;border-radius:2px"></i>Tooth movement</span>
+        <span><i style="width:13px;height:13px;background:#F3F8F1;border:1.5px solid #4F6175;border-radius:50%"></i><b style="color:#5E8A52">54</b>&nbsp;Primary tooth</span>
+        <span style="color:#C2414B;font-weight:700">✕ <span style="color:#566F84;font-weight:400">For extraction</span></span>
+      </div>
+    </div>
+    <p class="hint" id="hint" aria-live="polite"></p>
+  </section>
+
+  <aside class="rx panel" aria-label="Prescription">
+    <div>
+      <h3>Prescription</h3>
+      <div class="fields">
+        <div class="field full"><label for="pname">Patient name</label><input id="pname" autocomplete="off"></div>
+        <div class="field"><label for="pnum">CHI / hospital no.</label><input id="pnum" autocomplete="off" inputmode="numeric"></div>
+        <div class="field"><label for="clin">Clinician</label><input id="clin" autocomplete="off"></div>
+        <div class="field"><label for="date">Date</label><input id="date" type="date"></div>
+        <div class="field"><label for="due">Required by</label><input id="due" type="date"></div>
+        <div class="field full"><label for="colour">Acrylic</label>
+          <select id="colour"><option>Clear</option><option>Pink</option><option>Blue</option><option>Green</option><option>Purple</option></select></div>
+        <fieldset class="field full cb" id="cb" hidden><legend>Construction bite</legend>
+          <div class="fields">
+            <div class="field"><label for="cbProt">Protrusion (mm)</label><input id="cbProt" type="number" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 7"></div>
+            <div class="field"><label for="cbOpen">Incisal opening (mm)</label><input id="cbOpen" type="number" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 3"></div>
+            <div class="field full"><label for="cbCentre">Centrelines</label><select id="cbCentre"><option value="">Not specified</option><option>Coincident</option><option>As existing</option></select></div>
+          </div></fieldset>
+        <div class="field full"><label for="instr">Lab and wear instructions</label>
+          <textarea id="instr" placeholder="e.g. Please construct as drawn. Fit and activate springs at delivery appointment."></textarea></div>
+      </div>
+    </div>
+    <div>
+      <div class="row"><h3>Design</h3><span class="small" id="count"></span></div>
+      <ul class="dlist" id="dlist"></ul>
+    </div>
+    <div>
+      <div class="row"><h3>Text for the notes</h3><button id="copyNotes" class="btn">Copy text</button></div>
+      <pre class="notes" id="notes"></pre>
+      <p class="small" style="margin:6px 0 0">Patient details go on the card image only, not in this text. Nothing you type is saved when you close the page.</p>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="modal" id="modal" hidden>
+  <div class="box">
+    <div class="row"><h3 style="font-family:var(--f-display);font-size:19px">Lab card image</h3><button class="btn" id="closeModal">Close</button></div>
+    <p class="small" style="margin:0">Right-click (or press and hold) the image and choose <b>Copy image</b> or <b>Save image</b>.</p>
+    <img id="pimg" alt="Lab card image of the appliance design">
+  </div>
+</div>
+
+<script>
+/* ---------- geometry ---------- */
+const W=400,H=480;
+const CUR=[{x:200,y:58},{x:292,y:58},{x:340,y:182},{x:334,y:440}];
+function bez(u){const a=1-u,[p0,p1,p2,p3]=CUR;return{x:a*a*a*p0.x+3*a*a*u*p1.x+3*a*u*u*p2.x+u*u*u*p3.x,y:a*a*a*p0.y+3*a*a*u*p1.y+3*a*u*u*p2.y+u*u*u*p3.y}}
+function dbez(u){const a=1-u,[p0,p1,p2,p3]=CUR;return{x:3*a*a*(p1.x-p0.x)+6*a*u*(p2.x-p1.x)+3*u*u*(p3.x-p2.x),y:3*a*a*(p1.y-p0.y)+6*a*u*(p2.y-p1.y)+3*u*u*(p3.y-p2.y)}}
+const LUT=[{u:0,s:0}];let TOTAL=0;{let prev=bez(0);for(let i=1;i<=800;i++){const u=i/800,p=bez(u);TOTAL+=Math.hypot(p.x-prev.x,p.y-prev.y);LUT.push({u,s:TOTAL});prev=p}}
+function atLen(s){if(s>TOTAL){const e=bez(1),d=dbez(1),l=Math.hypot(d.x,d.y);return{p:{x:e.x+d.x/l*(s-TOTAL),y:e.y+d.y/l*(s-TOTAL)},d:{x:d.x/l,y:d.y/l}}}let lo=0,hi=LUT.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(LUT[m].s<s)lo=m;else hi=m}
+  const a=LUT[lo],b=LUT[hi],f=(s-a.s)/((b.s-a.s)||1),u=a.u+(b.u-a.u)*f,d=dbez(u),l=Math.hypot(d.x,d.y);return{p:bez(u),d:{x:d.x/l,y:d.y/l}}}
+// mesiodistal, buccolingual (mm), form
+const DIMS={upper:{1:[8.6,7.0,'inc'],2:[6.6,6.2,'inc'],3:[7.6,8.0,'can'],4:[7.0,9.0,'pm'],5:[6.6,9.0,'pm'],6:[10.2,11.2,'mol'],7:[9.2,11.0,'mol'],8:[8.4,10.4,'mol']},
+            lower:{1:[5.4,6.0,'inc'],2:[5.9,6.4,'inc'],3:[6.9,7.6,'can'],4:[7.0,7.8,'pm'],5:[7.1,8.2,'pm'],6:[11.2,10.4,'mol'],7:[10.5,10.2,'mol'],8:[10.0,9.8,'mol']}};
+const GEO={};
+const ekey=(a,b)=>a<b?`${a}|${b}`:`${b}|${a}`;
+const midKey=arch=>arch==='upper'?'11|21':'31|41';
+// neighbour across the mesial ('m') or distal ('d') contact
+function nbId(id,side){const q=Math.floor(id/10),n=id%10;if(side==='d')return n<8?id+1:null;if(n>1)return id-1;return({1:21,2:11,3:41,4:31})[q]}
+function geo(arch,base){const ck=arch+(base?'b':'');const ds=state.designs&&state.designs[arch]||{},sp=ds.space||{},dp=ds.disp||{},key=JSON.stringify([sp,base?0:dp]);
+  if(GEO[ck]&&GEO[ck].key===key)return GEO[ck];
+  const dims=DIMS[arch],gap=.25;let sum=0;for(let n=1;n<=8;n++)sum+=dims[n][0]+gap;
+  const K=TOTAL*.985/sum,teeth={};
+  for(const side of['R','L']){const q=arch==='upper'?(side==='R'?1:2):(side==='R'?4:3);let off=.12+(+sp[midKey(arch)]||0)/2;
+    for(let n=1;n<=8;n++){const[L,B,type]=dims[n],id=q*10+n;const sm=(off+L/2)*K;off+=L+gap+(+sp[ekey(id,id+1)]||0);const{p,d}=atLen(sm);
+      let c={x:p.x,y:p.y},t={x:d.x,y:d.y};
+      if(side==='R'){c.x=W-c.x;t.x=-t.x}
+      if(arch==='lower'){c.y=H-c.y;t.y=-t.y}
+      const perp={x:-t.y,y:t.x},cy=arch==='upper'?300:H-300;
+      const s=(perp.x*(W/2-c.x)+perp.y*(cy-c.y))>=0?1:-1;
+      let nrm={x:perp.x*s,y:perp.y*s};
+      const dsp=!base&&dp[id];
+      if(dsp){if(dsp.off)c={x:c.x+nrm.x*dsp.off*K,y:c.y+nrm.y*dsp.off*K};
+        if(dsp.rot){const th=dsp.rot*Math.PI/180,co=Math.cos(th),si=Math.sin(th),t2={x:t.x*co+nrm.x*si,y:t.y*co+nrm.y*si};nrm={x:nrm.x*co-t.x*si,y:nrm.y*co-t.y*si};t=t2}}
+      teeth[id]={id,n,side,type,L,B,K,c,t,nrm,s,ang:Math.atan2(t.y,t.x)*180/Math.PI}}}
+  return GEO[ck]={K,teeth,key}}
+// tooth-local mm → card px. local +x = distal, +y = palatal/lingual, −y = buccal/labial
+function tp(T,lx,ly){return{x:T.c.x+(T.t.x*lx+T.nrm.x*ly)*T.K,y:T.c.y+(T.t.y*lx+T.nrm.y*ly)*T.K}}
+const f=v=>Math.round(v*10)/10, pt=p=>`${f(p.x)} ${f(p.y)}`;
+function poly(ps){return'M'+ps.map(pt).join(' L')}
+function segs(ps){let d='';for(let i=0;i<ps.length-1;i++){const p0=ps[i-1]||ps[i],p1=ps[i],p2=ps[i+1],p3=ps[i+2]||p2;
+  d+=` C${pt({x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6})} ${pt({x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6})} ${pt(p2)}`}return d}
+function smooth(ps){return'M'+pt(ps[0])+segs(ps)}
+function smoothClosed(ps){const n=ps.length;let d='M'+pt(ps[0]);for(let i=0;i<n;i++){const p0=ps[(i-1+n)%n],p1=ps[i],p2=ps[(i+1)%n],p3=ps[(i+2)%n];
+  d+=` C${pt({x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6})} ${pt({x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6})} ${pt(p2)}`}return d+'Z'}
+
+/* ---------- drawing ---------- */
+const WIRE='#0B2E4A',ACT='#1C7293',ACR='#C2414B',ACRF='rgba(194,65,75,0.10)';
+const wire=(d,w=2.4)=>`<path d="${d}" fill="none" stroke="${WIRE}" stroke-width="${f(w)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const coil=(p,r,w=2)=>`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(r)}" fill="#fff" stroke="${WIRE}" stroke-width="${f(w)}"/>`;
+function arrow(a,b,col=ACT){const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,h=7.5,w=4.2,bx=b.x-ux*h,by=b.y-uy*h;
+  return`<line x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(bx)}" y2="${f(by)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/><path d="M${pt(b)} L${f(bx-uy*w)} ${f(by+ux*w)} L${f(bx+uy*w)} ${f(by-ux*w)}Z" fill="${col}"/>`}
+function toothPath(T){const l=T.L/2,b=T.B/2;switch(T.type){
+  case'inc':return`M${-l} ${-b+1.2} Q0 ${-b-.5} ${l} ${-b+1.2} Q${l+.2} .4 ${f(l*.45)} ${b-.2} Q0 ${b+.6} ${f(-l*.45)} ${b-.2} Q${-l-.2} .4 ${-l} ${-b+1.2}Z`;
+  case'can':return`M0 ${-b} Q${l} ${-b+.3} ${l} -.2 Q${f(l*.95)} ${f(b*.85)} 0 ${b} Q${f(-l*.95)} ${f(b*.85)} ${-l} -.2 Q${-l} ${-b+.3} 0 ${-b}Z`;
+  case'pm':return`M${-l} 0 C${-l} ${f(-b*1.32)} ${l} ${f(-b*1.32)} ${l} 0 C${l} ${f(b*1.32)} ${-l} ${f(b*1.32)} ${-l} 0Z`;
+  default:return`M${-l+2} ${-b} H${l-2} Q${l} ${-b} ${l} ${-b+2} V${b-2} Q${l} ${b} ${l-2} ${b} H${-l+2} Q${-l} ${b} ${-l} ${b-2} V${-b+2} Q${-l} ${-b} ${-l+2} ${-b}Z`}}
+function fissure(T){const l=T.L/2,b=T.B/2;switch(T.type){
+  case'inc':return`M${-l+.9} ${-b+1.7} Q0 ${-b+.8} ${l-.9} ${-b+1.7}`;
+  case'can':return`M${f(-l*.55)} -.5 L0 ${f(-b*.5)} L${f(l*.55)} -.5`;
+  case'pm':return`M${-l+1.4} 0 Q0 .5 ${l-1.4} 0`;
+  default:return`M${-l+1.8} -.3 L${l-1.8} .3 M-1 -.1 L-.6 ${-b+1.3} M1 .2 L1.6 ${b-1.4}`}}
+
+/* ---------- wire gauges & spans ---------- */
+const GAUGE={adams:'0.7',delta:'0.7',ball:'0.7',southend:'0.7',bow:'0.7',pfs:'0.5',z:'0.5',bcr:'0.7'};
+const GAUGES=['0.5','0.6','0.7','0.8','0.9'];
+const gaugeOpts=type=>type==='bcr'?[...GAUGES,'0.5 in tube']:GAUGES;
+const isPrim=id=>{const d=state.designs[archOf(id)];return!!(d&&d.prim&&d.prim[id])};
+const dispId=id=>isPrim(id)?id+40:id;
+const gDef=c=>c.tooth&&['adams','delta','ball'].includes(c.type)&&isPrim(c.tooth)?'0.6':GAUGE[c.type];
+const gOf=c=>c.g||gDef(c);
+const gw=c=>3.4*parseFloat(gOf(c));
+const gText=c=>{const g=gOf(c);return g.includes('tube')?'0.5 mm SS in 0.5 mm ID tubing':`${g} mm SS`};
+const SPANS={upper:['5-L','6-L','4-L'],lower:['3-5','4-5','4-6']};
+const spanOf=(c,arch)=>c.span||SPANS[arch][0];
+function spanRange(span,lastN){const[a,b]=span.split('-');return[+a,b==='L'?lastN:Math.min(+b,lastN)]}
+
+/* ---------- state ---------- */
+const state={view:'upper',garch:'upper',show8:false,tool:'adams',opts:{dir:'distal',move:'labial',gap:2,lap:2,pos:'pal'},designs:{upper:null,lower:null}};
+const hist=[];
+const TOOLS=[
+ {id:'adams',g:'Retention',name:'Adams clasp',kind:'tooth',hint:'Click a premolar or molar to add or remove an Adams clasp.',bad:'Adams clasps go on premolars or molars.',icon:'<path d="M3 16 L6 8 L8.5 13 H13.5 L16 8 L19 16"/>'},
+ {id:'delta',g:'Retention',name:'Delta clasp',kind:'tooth',hint:'Click a premolar or molar to add or remove a delta clasp.',bad:'Delta clasps go on premolars or molars.',icon:'<path d="M3 16 L6 8 L8.5 13 Z M8.5 13 H13.5 M13.5 13 L16 8 L19 16 Z"/>'},
+ {id:'ball',g:'Retention',name:'Ball-ended clasp',kind:'tooth',hint:'Click the tooth mesial to the contact, e.g. 14 for a clasp between 14 and 15.',bad:'Ball-ended clasps go between canine and molar contacts.',icon:'<circle cx="11" cy="6.5" r="2.4" fill="currentColor"/><path d="M11 9 V15 Q11 18 15 18"/>'},
+ {id:'southend',g:'Retention',name:'Southend clasp',kind:'global',icon:'<path d="M3 8 Q7 13 10 12 L11 16 L12 12 Q15 13 19 8"/>'},
+ {id:'bow',g:'Retention',name:'Labial bow',kind:'global',icon:'<path d="M3 17 V9 Q4.5 5 6 9 V12 Q11 15 16 12 V9 Q17.5 5 19 9 V17"/>'},
+ {id:'pfs',g:'Active',name:'Palatal finger spring',lname:'Lingual finger spring',bname:'Finger spring',kind:'tooth',opt:'dir',hint:'Click an incisor or canine. Choose the direction of movement below.',bad:'Finger springs here are for incisors and canines.',icon:'<circle cx="8" cy="15" r="3"/><path d="M10.5 13 L18 5"/>'},
+ {id:'z',g:'Active',name:'Z-spring',kind:'tooth',hint:'Click an incisor to procline it.',bad:'Z-springs go on central or lateral incisors.',icon:'<path d="M5 5 H17 Q19 7 17 9 H5 Q3 11 5 13 H17"/><path d="M11 13 V18"/>'},
+ {id:'bcr',g:'Active',name:'Buccal canine retractor',kind:'tooth',hint:'Click a canine.',bad:'The buccal canine retractor goes on a canine.',icon:'<circle cx="14" cy="14" r="3"/><path d="M11.2 13 Q7 6 4 7"/>'},
+ {id:'screw',g:'Active',name:'Midline expansion screw',kind:'global',upperOnly:true,icon:'<rect x="6" y="4" width="10" height="14" rx="2"/><path d="M11 4 V18 M8 11 H14"/>'},
+ {id:'block',g:'Functional',name:'Twin block bite blocks',kind:'global',icon:'<rect x="3" y="7" width="7" height="10" rx="1.5" fill="currentColor" fill-opacity=".2"/><rect x="12" y="7" width="7" height="10" rx="1.5" fill="currentColor" fill-opacity=".2"/><path d="M3 7 L10 17 M12 7 L19 17"/>'},
+ {id:'capping',g:'Functional',name:'Lower incisor capping',kind:'global',lowerOnly:true,icon:'<path d="M4 9 Q11 15 18 9 V13 Q11 19 4 13 Z" fill="currentColor" fill-opacity=".2"/>'},
+ {id:'baseplate',g:'Acrylic',name:'Baseplate',kind:'global',icon:'<path d="M4 18 C4 6 8 4 11 4 S18 6 18 18 Z" fill="currentColor" fill-opacity=".18"/>'},
+ {id:'fabp',g:'Acrylic',name:'Anterior bite plane',kind:'global',upperOnly:true,icon:'<rect x="4" y="7" width="14" height="8" rx="2"/><path d="M7 15 L11 7 M11 15 L15 7"/>'},
+ {id:'pbp',g:'Acrylic',name:'Posterior bite planes',kind:'global',icon:'<rect x="3" y="6" width="6" height="11" rx="2"/><rect x="13" y="6" width="6" height="11" rx="2"/>'},
+ {id:'vfr',g:'Retainer',name:'Vacuum-formed retainer',kind:'global',icon:'<path d="M3 18 C3 6 7 4 11 4 S19 6 19 18" stroke-dasharray="2 2"/>'},
+ {id:'space',g:'Teeth',name:'Spacing',kind:'tooth',opt:'gap',hint:'Pick a gap size, then tap the mesial or distal half of a tooth to open a space between it and its neighbour (tap between 11 and 21 for a midline diastema). Tap again with the same size to close it.',icon:'<rect x="2.5" y="6" width="6" height="10" rx="2.5"/><rect x="13.5" y="6" width="6" height="10" rx="2.5"/><path d="M9.5 11h3"/>'},
+ {id:'crowd',g:'Teeth',name:'Crowding',kind:'tooth',opt:'crowd',hint:'Pick an overlap and what happens to the tapped tooth, then tap the mesial or distal half of the tooth that is out of line. Tap again with the same settings to undo it.',icon:'<rect x="3" y="6" width="8" height="10" rx="3"/><rect x="9" y="8" width="8" height="10" rx="3" transform="rotate(18 13 13)"/>'},
+ {id:'arrow',g:'Teeth',name:'Movement arrow',kind:'tooth',opt:'move',hint:'Click a tooth to show its planned movement. Choose the direction below.',icon:'<path d="M4 11 H17 M13 7 L17 11 L13 15"/>'},
+ {id:'extract',g:'Teeth',name:'For extraction',kind:'tooth',hint:'Click a tooth to mark or unmark it for extraction.',icon:'<path d="M5 5 L17 17 M17 5 L5 17"/>'},
+ {id:'primary',g:'Teeth',name:'Primary tooth',kind:'tooth',hint:'Click a position from central incisor to second premolar to switch between the permanent and primary tooth.',bad:'Primary teeth replace positions 1 to 5 only.',icon:'<path d="M6 7 Q11 4 16 7 Q17 12 14 17 L12 13 L10 13 L8 17 Q5 12 6 7Z"/>'},
+ {id:'missing',g:'Teeth',name:'Missing tooth',kind:'tooth',hint:'Click a tooth to mark or unmark it as missing.',icon:'<circle cx="11" cy="11" r="6.5" stroke-dasharray="2.2 2"/>'},
+];
+const TOOLMAP=Object.fromEntries(TOOLS.map(t=>[t.id,t]));
+const TPL={
+ twin:{name:'Twin block (Clark)',both:true,upper:[['adams',6],['ball',4],['screw'],['block'],['baseplate']],lower:[['adams',4],['ball',2],['block'],['capping'],['baseplate']]},
+ twinNoScrew:{name:'Twin block without screw',both:true,upper:[['delta',6],['ball',4],['southend'],['block'],['baseplate']],lower:[['delta',4],['block'],['capping'],['baseplate']]},
+ canine:{name:'Canine retraction (palatal finger springs)',c:[['adams',6],['southend'],['pfs',3,'distal'],['baseplate']],t:[[4,'extract']]},
+ expand:{name:'Midline expansion',upperOnly:true,c:[['adams',6],['adams',4],['screw'],['baseplate']]},
+ xbite:{name:'Anterior crossbite (Z-springs)',c:[['adams',6],['adams',4],['z',1],['pbp'],['baseplate']]},
+ overbite:{name:'Overbite reduction (anterior bite plane)',upperOnly:true,c:[['adams',6],['southend'],['fabp'],['baseplate']]},
+ bcr:{name:'Buccal canine retractors',c:[['adams',6],['southend'],['bcr',3],['baseplate']],t:[[4,'extract']]},
+ hawley:{name:'Hawley retainer',c:[['adams',6],['bow'],['baseplate']]},
+ vfr:{name:'Vacuum-formed retainer',c:[['vfr']]},
+ blank:{name:'Blank card',c:[]}
+};
+function build(list,teeth,arch){const q=arch==='upper'?[1,2]:[4,3],d={comps:[],teeth:{},prim:{},space:{},disp:{}};
+  for(const[type,n,dir]of list){if(n)for(const qq of q)d.comps.push(dir?{type,tooth:qq*10+n,dir}:{type,tooth:qq*10+n});else d.comps.push({type})}
+  for(const[n,st]of(teeth||[]))for(const qq of q)d.teeth[qq*10+n]=st;return d}
+const fromTpl=(key,arch)=>build(TPL[key].c,TPL[key].t,arch);
+state.designs.upper=fromTpl('canine','upper');state.designs.lower=fromTpl('hawley','lower');
+const archOf=id=>Math.floor(id/10)<=2?'upper':'lower';
+const TA=()=>state.view==='both'?state.garch:state.view;   // arch that whole-arch components go on
+const archesShown=()=>state.view==='both'?['upper','lower']:[state.view];
+const maxN=()=>state.show8?8:7;
+function snapshot(){hist.push(JSON.stringify({v:state.view,g:state.garch,d:state.designs}));if(hist.length>60)hist.shift()}
+
+/* ---------- card render ---------- */
+function canPlace(tool,T,d){const st=d.teeth[T.id];switch(tool){
+  case'adams':case'delta':return T.n>=4&&!st;case'ball':return T.n>=2&&T.n<maxN()&&!st&&!d.teeth[T.id+1];
+  case'pfs':return T.n<=3&&!st;case'z':return T.n<=2&&!st;case'bcr':return T.n===3&&!st;
+  case'primary':return T.n<=5;case'space':case'crowd':return true;case'arrow':return st!=='missing';case'extract':case'missing':return true}return false}
+
+function renderCard(arch,d,exp){
+  const G=geo(arch),T=G.teeth,Tb=geo(arch,true).teeth,U=arch==='upper',mx=maxN(),q=U?{R:1,L:2}:{R:4,L:3},hid='h'+arch[0],xid='x'+arch[0];
+  const has=t=>d.comps.some(c=>c.type===t);
+  const last=side=>{for(let n=mx;n>=1;n--)if(d.teeth[q[side]*10+n]!=='missing')return n;return 1};
+  const lR=last('R'),lL=last('L'),TR=Tb[q.R*10+lR],TL=Tb[q.L*10+lL];
+  const seq=(a,bR,bL)=>{const o=[];for(let n=bR;n>=a;n--)o.push(Tb[q.R*10+n]);for(let n=a;n<=bL;n++)o.push(Tb[q.L*10+n]);return o};
+  const sideIds=(side,a,b)=>{const o=[];if(side==='R')for(let n=b;n>=a;n--)o.push(Tb[q.R*10+n]);else for(let n=a;n<=b;n++)o.push(Tb[q.L*10+n]);return o};
+  const row=(teeth,yf)=>{const o=[];for(const t of teeth){const l=t.L/2,xs=t.side==='R'?[.7*l,0,-.7*l]:[-.7*l,0,.7*l];for(const x of xs)o.push(tp(t,x,yf(t)))}return o};
+  const band=(ids,yo,yi)=>{const bu=row(ids,yo),pa=row(ids,yi).reverse();return`${smooth(bu)} L${pt(pa[0])}${segs(pa)}Z`};
+  let s=`<defs><pattern id="${hid}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="${ACR}" stroke-width="1.3"/></pattern>`+
+    `<pattern id="${xid}" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 0 L6 6 M6 0 L0 6" stroke="${ACR}" stroke-width="1"/></pattern></defs>`;
+  s+=`<rect x="-14" y="0" width="${W+28}" height="${H}" fill="#fff"/>`;
+  // baseplate
+  if(has('baseplate')){const ids=seq(1,lR,lL);
+    if(U){const ps=[tp(TR,TR.L/2+.3,TR.B/2-.4),...row(ids,t=>t.B/2-.9),tp(TL,TL.L/2+.3,TL.B/2-.4)];
+      s+=`<path d="${smooth(ps)}Z" fill="${ACRF}" stroke="${ACR}" stroke-width="1.6" stroke-linejoin="round"/>`}
+    else{const outer=[tp(TR,TR.L/2+.3,TR.B/2-.4),...row(ids,t=>t.B/2-.9),tp(TL,TL.L/2+.3,TL.B/2-.4)];
+      const inner=[tp(TL,TL.L/2+.3,TL.B/2+5.5),...row(ids,t=>t.B/2+5.5).reverse(),tp(TR,TR.L/2+.3,TR.B/2+5.5)];
+      s+=`<path d="${smooth(outer)} L${pt(inner[0])}${segs(inner)}Z" fill="${ACRF}" stroke="${ACR}" stroke-width="1.6" stroke-linejoin="round"/>`}}
+  if(U&&has('fabp')){const ids=seq(1,3,3),inner=row(ids,t=>t.B/2-.6),outer=row(ids,t=>t.B/2+7.5).reverse();
+    s+=`<path d="${smooth(inner)} L${pt(outer[0])}${segs(outer)}Z" fill="url(#${hid})" stroke="${ACR}" stroke-width="1.5"/>`;
+    const a=tp(T[11],-T[11].L/2,T[11].B/2+10.5);s+=`<text x="${W/2}" y="${f(a.y)}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="${ACR}">FABP</text>`}
+  if(U&&has('screw')){const a=tp(T[14],0,0),b=tp(T[24],0,0),cx=W/2,cy=(a.y+b.y)/2+4,w=6.5*G.K,h=9*G.K;
+    const yF=tp(T[11],-T[11].L/2,T[11].B/2-.9).y,yB=(tp(TR,TR.L/2,0).y+tp(TL,TL.L/2,0).y)/2;
+    if(has('baseplate'))s+=`<path d="M${cx} ${f(yF+4)} V${f(cy-h/2)} M${cx} ${f(cy+h/2)} V${f(yB)}" stroke="${ACR}" stroke-width="1.6" stroke-dasharray="5 3.5"/>`;
+    s+=`<rect x="${f(cx-w/2)}" y="${f(cy-h/2)}" width="${f(w)}" height="${f(h)}" rx="4" fill="#E8EEF3" stroke="${WIRE}" stroke-width="1.8"/>`+
+       `<path d="M${f(cx-w*.3)} ${f(cy-h*.38)} V${f(cy+h*.38)} M${f(cx+w*.3)} ${f(cy-h*.38)} V${f(cy+h*.38)} M${f(cx-w*.3)} ${f(cy)} H${f(cx+w*.3)}" stroke="${WIRE}" stroke-width="1.4"/>`+
+       `<rect x="${f(cx-3.2)}" y="${f(cy-3.2)}" width="6.4" height="6.4" fill="#fff" stroke="${WIRE}" stroke-width="1.3" transform="rotate(45 ${cx} ${f(cy)})"/>`+
+       arrow({x:cx-w/2-4,y:cy},{x:cx-w/2-24,y:cy})+arrow({x:cx+w/2+4,y:cy},{x:cx+w/2+24,y:cy})}
+  // teeth
+  const pr=d.prim||{};
+  const dpo=d.disp||{},rank=id=>{const v=dpo[id];return!v?1:v.off>0?0:2},order=[];for(const side of['R','L'])for(let n=1;n<=mx;n++)order.push(q[side]*10+n);order.sort((a,b)=>rank(a)-rank(b));
+  for(const oid of order){const n=oid%10,t0=T[oid],P0=pr[t0.id],t=P0?{...t0,L:t0.L*(n>=4?1.04:.8),B:t0.B*(n>=4?.92:.82),type:n>=4?'mol':t0.type}:t0,st=d.teeth[t.id],ok=!exp&&TOOLMAP[state.tool].kind==='tooth'&&canPlace(state.tool,t,d);
+    s+=`<g class="tooth${ok?' ok':''}" data-tooth="${t.id}" transform="translate(${f(t.c.x)} ${f(t.c.y)}) rotate(${f(t.ang)}) scale(${f(t.K*100)/100} ${f(t.K*t.s*100)/100})">`+
+      `<path class="tshape" d="${toothPath(t)}" fill="${P0?'#F3F8F1':'#fff'}" fill-opacity="${st==='missing'?0:1}" stroke="${st==='missing'?'#A3B1BD':'#4F6175'}" stroke-width=".19"${st==='missing'?' stroke-dasharray=".7 .5"':''}/>`+
+      (st==='missing'?'':`<path d="${fissure(t)}" fill="none" stroke="${P0?'#A9BBA2':'#9CABB8'}" stroke-width=".12" stroke-linecap="round"/>`)+`</g>`;
+    if(st==='extract'){const l=t.L/2*.75,b=t.B/2*.75;s+=`<path d="M${pt(tp(t,-l,-b))} L${pt(tp(t,l,b))} M${pt(tp(t,l,-b))} L${pt(tp(t,-l,b))}" stroke="${ACR}" stroke-width="2.4" stroke-linecap="round" pointer-events="none"/>`}}
+  // overlays
+  if(has('pbp'))for(const side of['R','L']){const ln=side==='R'?lR:lL;if(ln<4)continue;
+    s+=`<path d="${band(sideIds(side,4,ln),t=>-t.B/2-.4,t=>t.B/2+.4)}" fill="url(#${hid})" stroke="${ACR}" stroke-width="1.5" pointer-events="none"/>`}
+  if(has('block')){const c=d.comps.find(c=>c.type==='block'),sp=spanOf(c,arch);
+    for(const side of['R','L']){const[a,b]=spanRange(sp,side==='R'?lR:lL);if(b<a)continue;const ids=sideIds(side,a,b);
+      const p=band(ids,t=>-t.B/2-.5,t=>t.B/2+.5);
+      s+=`<path d="${p}" fill="rgba(194,65,75,0.18)" pointer-events="none"/><path d="${p}" fill="url(#${xid})" stroke="${ACR}" stroke-width="1.6" pointer-events="none"/>`;
+      // inclined plane: mesial face of upper block, distal face of lower block
+      const Tp=T[q[side]*10+(U?a:b)],sx=U?-1:1,l=Tp.L/2,bb=Tp.B/2,e1=tp(Tp,sx*(l+.3),-bb-.5),e2=tp(Tp,sx*(l+.3),bb+.5),i1=tp(Tp,sx*(l-1.6),-bb-.5),i2=tp(Tp,sx*(l-1.6),bb+.5);
+      s+=`<path d="M${pt(e1)} L${pt(e2)} L${pt(i2)} L${pt(i1)}Z" fill="${ACR}" fill-opacity=".55" stroke="${ACR}" stroke-width="1.4" pointer-events="none"/>`;
+      const lp=tp(Tp,sx*(l+.3),bb+3.6);s+=`<text x="${f(lp.x)}" y="${f(lp.y)}" text-anchor="middle" dominant-baseline="central" font-family="Arial,Helvetica,sans-serif" font-size="9.5" font-weight="700" fill="${ACR}" pointer-events="none">70°</text>`}}
+  if(!U&&has('capping')){const ids=seq(1,3,3);
+    s+=`<path d="${band(ids,t=>-t.B/2-1.1,t=>t.B/2+.6)}" fill="rgba(194,65,75,0.18)" stroke="${ACR}" stroke-width="1.6" pointer-events="none"/>`}
+  if(has('vfr')){const ids=seq(1,lR,lL).filter(t=>d.teeth[t.id]!=='missing');
+    const ps=[tp(TR,TR.L/2+1.1,0),...row(ids,t=>-t.B/2-1.0),tp(TL,TL.L/2+1.1,0),...row(ids,t=>t.B/2+1.3).reverse()];
+    s+=`<path d="${smoothClosed(ps)}" fill="rgba(28,114,147,0.10)" stroke="${ACT}" stroke-width="1.6" stroke-dasharray="6 3" pointer-events="none"/>`}
+  // wires & springs
+  let w='';
+  for(const c of d.comps){const t=T[c.tooth];if(c.tooth&&t.n>mx)continue;const ww=gw(c);
+    if(c.tooth){var l=t.L/2,b=t.B/2,P=(x,y)=>tp(t,x,y)}
+    switch(c.type){
+    case'adams':case'delta':w+=wire(poly([P(-l+1.3,b+3.2),P(-l+.1,b+.6),P(-l-.15,-b+1),P(-l-.5,-b-1.5),P(-l+.8,-b+.2),P(-l+2.1,-b-2.3),P(l-2.1,-b-2.3),P(l-.8,-b+.2),P(l+.5,-b-1.5),P(l+.15,-b+1),P(l-.1,b+.6),P(l-1.3,b+3.2)]),ww);
+      if(c.type==='delta')w+=wire(poly([P(-l-.5,-b-1.5),P(-l+2.1,-b-2.3)]),ww)+wire(poly([P(l+.5,-b-1.5),P(l-2.1,-b-2.3)]),ww);break;
+    case'ball':{const c0=P(l+.15,-b+.5);w+=wire(smooth([c0,P(l+.2,-b+1.4),P(l+.15,b+.3),P(l-1,b+3.2)]),ww)+`<circle cx="${f(c0.x)}" cy="${f(c0.y)}" r="${f(.85*t.K)}" fill="${WIRE}"/>`;break}
+    case'southend':{const half=t=>{const l=t.L/2,b=t.B/2,P=(x,y)=>tp(t,x,y);return[P(l-.9,b+3.4),P(l+.1,b+.3),P(l+.25,-b+1.3),P(l-.9,-b-.2),P(0,-b-.6),P(-l+1.3,-b-.25),P(-l+.35,-b+1.5)]};
+      w+=wire(smooth([...half(T[q.R*10+1]),...half(T[q.L*10+1]).reverse()]),ww);break}
+    case'bow':{const half=side=>{const C=T[q[side]*10+3],I2=T[q[side]*10+2],I1=T[q[side]*10+1],l=C.L/2,b=C.B/2,P=(x,y)=>tp(C,x,y);
+        return[P(l-.9,b+3.4),P(l+.15,b+.4),P(l+.3,-b+.6),P(l+.35,-b-1.2),P(l+.35,-b-3.8),P(l-1,-b-5.4),P(l-2.4,-b-3.8),P(l-2.4,-b-1.4),P(-l*.4,-b-.3),tp(I2,0,-I2.B/2-.45),tp(I1,0,-I1.B/2-.5)]};
+      w+=wire(smooth([...half('R'),...half('L').reverse()]),ww);break}
+    case'pfs':{const v=c.dir==='distal'?1:-1,m=-v,cx=v*2.2,cy=b+6.5,cr=1.3,bx=m*(l+.3),by=b+3.2;
+      const ax=cx-v*cr-bx,ay=cy-by,al=Math.hypot(ax,ay),mx2=(bx+cx-v*cr)/2,my=(by+cy)/2,gx=-ay/al*2.6,gy=ax/al*2.6;
+      w+=wire(smooth([P(m*(l-.7),-b*.55),P(m*(l+.45),-.6),P(m*(l+.6),b*.7),P(bx,by),P(cx-v*cr,cy)]),ww)+coil(P(cx,cy),cr*t.K,ww*.85)+
+        wire(smooth([P(cx+v*cr,cy),P(v*5.2,b+8.2),P(v*7.2,b+8.8)]),ww)+
+        wire(poly([P(mx2+gx*1.25,my+gy*1.25+1),P(mx2+gx,my+gy),P(mx2-gx,my-gy),P(mx2-gx*1.25,my-gy*1.25+1)]),1.5)+
+        arrow(P(-v*2.2,-b-3.4),P(v*3,-b-3.4));break}
+    case'z':{const y1=b+.35,y2=b+1.55,y3=b+2.75,xr=l-1.1,xl=-l+1.1;
+      w+=wire(poly([P(xl,y1),P(xr,y1)]),ww)+coil(P(xr,(y1+y2)/2),.6*t.K,ww*.85)+wire(poly([P(xr,y2),P(xl,y2)]),ww)+coil(P(xl,(y2+y3)/2),.6*t.K,ww*.85)+
+        wire(smooth([P(xl,y3),P(l-.6,y3),P(l-.2,b+5.5),P(.6,b+8)]),ww)+arrow(P(0,-b+.8),P(0,-b-4.2));break}
+    case'bcr':{const F=T[c.tooth+1],lf=F.L/2,bf=F.B/2,Pf=(x,y)=>tp(F,x,y),cc=Pf(-.3,-bf-4.6),tube=gOf(c).includes('tube');
+      w+=wire(smooth([Pf(lf-1,bf+3.3),Pf(lf+.1,bf+.4),Pf(lf+.2,-bf+.8),Pf(lf-.2,-bf-2.6),Pf(1.1,-bf-4.6)]),tube?3.6:ww)+
+        wire(smooth([Pf(-.3,-bf-6),Pf(-lf-.5,-bf-5),P(.6,-b-3.4),P(-l+.3,-b-2),P(-l-.7,-1.4),P(-l-.2,-.2)]),ww)+coil(cc,1.3*t.K,ww*.85)+
+        arrow(P(-1.2,-b*.35),P(2.4,b*.45));break}
+    case'arrow':{const m={labial:[P(0,.8),P(0,-b-3.8)],palatal:[P(0,-.8),P(0,b+3.8)],mesial:[P(l*.4,0),P(-l-2.8,0)],distal:[P(-l*.4,0),P(l+2.8,0)]}[c.dir];w+=arrow(m[0],m[1]);break}
+    }}
+  s+=w;
+  for(const side of['R','L'])for(let n=1;n<=mx;n++){const t=T[q[side]*10+n],p=tp(t,0,-t.B/2-(t.n>=4?4.4:2.4)),miss=d.teeth[t.id]==='missing';
+    s+=`<text x="${f(p.x)}" y="${f(p.y)}" text-anchor="middle" dominant-baseline="central" font-family="Arial,Helvetica,sans-serif" font-size="9.5" font-weight="${pr[t.id]?700:400}" fill="${miss?'#A3B1BD':pr[t.id]?'#5E8A52':'#4A5D70'}" pointer-events="none">${dispId(t.id)}</text>`}
+  const ly=U?H-10:22;
+  s+=`<text x="-8" y="${ly}" font-family="Georgia,serif" font-size="15" font-weight="700" fill="#8597A7">R</text><text x="${W+8}" y="${ly}" text-anchor="end" font-family="Georgia,serif" font-size="15" font-weight="700" fill="#8597A7">L</text>`;
+  if(state.view==='both'||exp==='both')s+=`<text x="${W/2}" y="${U?H-10:22}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="10.5" font-weight="700" letter-spacing="1.5" fill="#8597A7">${U?'UPPER':'LOWER'}</text>`;
+  return s}
+const GAP=16;
+function cardMarkup(exp){const A=archesShown();if(A.length===1)return{vb:`-14 0 ${W+28} ${H}`,h:H,body:renderCard(A[0],state.designs[A[0]],exp)};
+  return{vb:`-14 0 ${W+28} ${H*2+GAP}`,h:H*2+GAP,body:`<g>${renderCard('upper',state.designs.upper,exp&&'both')}</g><line x1="0" x2="${W}" y1="${H+GAP/2}" y2="${H+GAP/2}" stroke="#D2DDE5" stroke-dasharray="4 4"/><g transform="translate(0 ${H+GAP})">${renderCard('lower',state.designs.lower,exp&&'both')}</g>`}}
+
+/* ---------- text ---------- */
+const DIRW={distal:'distally',mesial:'mesially',labial:'labially',palatal:'palatally'};
+function visible(d){const mx=maxN();return d.comps.filter(c=>!c.tooth||(c.tooth%10)<=mx)}
+const val=id=>document.getElementById(id).value.trim();
+function summary(d,arch){const U=arch==='upper',pal=U?'Palatal':'Lingual',g=[],idx={};
+  for(const c of visible(d)){const k=c.type+'|'+(c.dir||'')+'|'+(GAUGE[c.type]?gOf(c):'');if(!idx[k]){idx[k]={type:c.type,dir:c.dir,c,teeth:[]};g.push(idx[k])}if(c.tooth)idx[k].teeth.push(c.tooth)}
+  const order=['adams','delta','ball','southend','bow','pfs','z','bcr','screw','block','capping','fabp','pbp','vfr','baseplate','arrow'],out=[];
+  const colour=val('colour').toLowerCase(),mx=maxN();
+  for(const type of order)for(const x of g.filter(x=>x.type===type)){const t=x.teeth.sort((a,b)=>a-b),pl=t.length>1?'s':'',ls=t.map(dispId).join(', '),gt=GAUGE[type]?' — '+gText(x.c):'';
+    const dw=x.dir==='palatal'&&!U?'lingually':DIRW[x.dir];
+    let blk='';if(type==='block'){const[a,b]=spanRange(spanOf(x.c,arch),mx);blk=`${U?'Upper':'Lower'} bite blocks over ${a}–${b} bilaterally, 70° inclined planes ${U?'on the mesial of the '+a+'s':'on the distal of the '+b+'s'}`}
+    out.push({adams:`Adams clasp${pl} ${ls}${gt}`,delta:`Delta clasp${pl} ${ls}${gt}`,ball:`Ball-ended clasp${pl} ${t.map(a=>dispId(a)+'/'+dispId(a+1)).join(', ')}${gt}`,
+      southend:`Southend clasp ${U?'11/21':'41/31'}${gt}`,bow:`Labial bow with U-loops ${U?'13–23':'43–33'}${gt}`,
+      pfs:`${pal} finger spring${pl} ${ls}, boxed and guarded, to move ${dw}${gt}`,z:`Z-spring${pl} ${ls} to procline${gt}`,
+      bcr:`Buccal canine retractor${pl} ${ls}, to retract distally and ${U?'palatally':'lingually'}${gt}`,
+      screw:'Midline expansion screw, baseplate split in the midline',block:blk,capping:'Acrylic capping of the lower incisors',
+      fabp:'Flat anterior bite plane',pbp:'Posterior bite planes',vfr:'Vacuum-formed retainer to the last standing tooth',
+      baseplate:`Acrylic baseplate (${colour})`,arrow:`Planned movement ${dw}: ${ls}`}[type])}
+  return out}
+function teethLines(d){const mx=maxN(),ex=[],mi=[],so=a=>a.sort((a,b)=>a-b).map(dispId).join(', ');for(const[id,st]of Object.entries(d.teeth)){if(id%10>mx)continue;(st==='extract'?ex:mi).push(+id)}
+  const pr=Object.keys(d.prim||{}).map(Number);
+  const o=[];if(pr.length)o.push('Primary teeth present: '+so(pr));
+  const pair=k=>k.split('|').map(Number),nmK=k=>pair(k).map(dispId).join('/'),ents=Object.entries(d.space||{}).filter(([k,v])=>+v&&pair(k).every(i=>i%10<=mx));
+  const gp=ents.filter(e=>e[1]>0).map(([k,v])=>`${v} mm ${(k==='11|21'||k==='31|41')?'midline diastema ('+nmK(k)+')':'between '+pair(k).map(dispId).join(' and ')}`);
+  if(gp.length)o.push('Spacing: '+gp.join('; '));
+  const PW={lab:'displaced labially',pal:'displaced palatally',ml:'rotated mesiolabially',dl:'rotated distolabially'},pk=v=>Object.keys(POS).find(k=>JSON.stringify(POS[k])===JSON.stringify(v));
+  const cr=ents.filter(e=>e[1]<0).map(([k,v])=>`${-v} mm overlap at ${nmK(k)}`).concat(Object.entries(d.disp||{}).filter(([i])=>i%10<=mx).map(([i,v])=>{let w=PW[pk(v)]||'displaced';if(Math.floor(i/10)>2)w=w.replace('palatally','lingually');return`${dispId(+i)} ${w}`}));
+  if(cr.length)o.push('Crowding: '+cr.join('; '));if(ex.length)o.push('For extraction: '+so(ex));if(mi.length)o.push('Missing: '+so(mi));return o}
+const hasBlock=a=>visible(state.designs[a]).some(c=>c.type==='block');
+function archName(d,arch){const A=arch==='upper'?'Upper':'Lower',t=new Set(visible(d).map(c=>c.type));
+  if(t.has('block'))return`${A} twin block`;
+  if(t.has('vfr')&&![...t].some(x=>!['vfr','arrow'].includes(x)))return`${A} vacuum-formed retainer`;
+  if(t.has('bow')&&!['pfs','z','bcr','screw'].some(x=>t.has(x)))return`${A} Hawley retainer`;
+  return`${A} removable appliance`}
+function applianceName(){if(state.view!=='both')return archName(state.designs[state.view],state.view);
+  if(hasBlock('upper')&&hasBlock('lower'))return'Twin block appliance';return'Upper and lower appliances'}
+function cbLines(){if(!(hasBlock('upper')||hasBlock('lower'))||state.view!=='both'&&!hasBlock(state.view))return[];
+  const p=val('cbProt'),o=val('cbOpen'),c=val('cbCentre'),parts=[];
+  if(p)parts.push(`${p} mm protrusion`);if(o)parts.push(`${o} mm interincisal opening`);if(c)parts.push(`centrelines ${c.toLowerCase()}`);
+  return parts.length?['Construction bite: '+parts.join(', ')]:['Construction bite: to be recorded']}
+const fmt=v=>v?v.split('-').reverse().join('/'):'';
+function notesText(){const A=archesShown(),lines=[applianceName()+' — design'];
+  for(const a of A){if(A.length>1)lines.push((a==='upper'?'Upper':'Lower')+':');lines.push(...summary(state.designs[a],a).map(x=>'• '+x))}
+  for(const a of A)lines.push(...teethLines(state.designs[a]));lines.push(...cbLines());
+  if(val('due'))lines.push('Required by: '+fmt(val('due')));if(val('instr'))lines.push('Instructions: '+val('instr'));
+  if(val('clin'))lines.push('Prescribed by: '+val('clin')+(val('date')?', '+fmt(val('date')):''));return lines.join('\n')}
+
+/* ---------- export ---------- */
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function wrap(t,n){const o=[];let cur='';for(const w of t.split(/\s+/)){if((cur+' '+w).trim().length>n&&cur){o.push(cur);cur=w}else cur=(cur+' '+w).trim()}if(cur)o.push(cur);return o}
+function exportSVG(){const Wd=820,F='Arial,Helvetica,sans-serif',cm=cardMarkup(true),boxH=cm.h+56;
+  let r=`<rect width="${Wd}" height="62" fill="#0B2E4A"/><text x="24" y="39" font-family="Georgia,'Times New Roman',serif" font-size="21" fill="#fff">Orthodontic appliance prescription</text>`+
+    `<text x="${Wd-24}" y="39" text-anchor="end" font-family="${F}" font-size="13.5" font-weight="700" fill="#7FD0C7">${esc(applianceName())}</text>`+
+    `<rect y="62" width="${Wd}" height="50" fill="#F1F5F8"/>`;
+  const fields=[['PATIENT',val('pname')||'—',24],['CHI / HOSPITAL NO.',val('pnum')||'—',300],['DATE',fmt(val('date'))||'—',490],['CLINICIAN',val('clin')||'—',610]];
+  for(const[k,v,x]of fields)r+=`<text x="${x}" y="80" font-family="${F}" font-size="9" letter-spacing="1" fill="#566F84">${k}</text><text x="${x}" y="99" font-family="${F}" font-size="14" font-weight="700" fill="#0B2E4A">${esc(v)}</text>`;
+  r+=`<rect x="8" y="126" width="428" height="${boxH}" rx="6" fill="#fff" stroke="#D2DDE5"/><svg x="8" y="132" width="428" height="${cm.h}" viewBox="${cm.vb}">${cm.body}</svg>`;
+  const ly=132+cm.h+26;r+=`<line x1="30" y1="${ly}" x2="48" y2="${ly}" stroke="${WIRE}" stroke-width="2.5"/><text x="54" y="${ly+4}" font-family="${F}" font-size="11" fill="#566F84">Wire</text>`+
+    `<rect x="90" y="${ly-6}" width="16" height="11" rx="2" fill="${ACRF}" stroke="${ACR}" stroke-width="1.4"/><text x="112" y="${ly+4}" font-family="${F}" font-size="11" fill="#566F84">Acrylic</text>`+
+    `<rect x="160" y="${ly-6}" width="16" height="11" rx="2" fill="rgba(194,65,75,0.25)" stroke="${ACR}" stroke-width="1.4"/><text x="182" y="${ly+4}" font-family="${F}" font-size="11" fill="#566F84">Bite block</text>`+
+    `<line x1="246" y1="${ly}" x2="264" y2="${ly}" stroke="${ACT}" stroke-width="2.5"/><text x="270" y="${ly+4}" font-family="${F}" font-size="11" fill="#566F84">Movement</text>`+
+    `<text x="336" y="${ly+4}" font-family="${F}" font-size="12" font-weight="700" fill="${ACR}">✕</text><text x="350" y="${ly+4}" font-family="${F}" font-size="11" fill="#566F84">Extraction</text>`;
+  let y=150;const X=450,sec=t=>{r+=`<text x="${X}" y="${y}" font-family="${F}" font-size="10" font-weight="700" letter-spacing="1.2" fill="#1C7293">${t}</text>`;y+=20},
+    line=(t,b)=>{const ls=wrap(t,52);ls.forEach((s,i)=>{r+=`<text x="${X+(b?14:0)}" y="${y}" font-family="${F}" font-size="12.5" fill="#0B2E4A">${esc(s)}</text>`;if(b&&i===0)r+=`<circle cx="${X+4}" cy="${y-4}" r="2.2" fill="#3FA9A0"/>`;y+=17});y+=4};
+  const A=archesShown();
+  A.forEach((a,i)=>{if(i)y+=8;sec(A.length>1?(a==='upper'?'UPPER DESIGN':'LOWER DESIGN'):'DESIGN');const sm=summary(state.designs[a],a);if(sm.length)sm.forEach(s=>line(s,true));else line('No components drawn.')});
+  const tl=A.flatMap(a=>teethLines(state.designs[a]));if(tl.length){y+=8;sec('TEETH');tl.forEach(s=>line(s))}
+  const cb=cbLines();if(cb.length){y+=8;sec('CONSTRUCTION BITE');line(cb[0].replace('Construction bite: ',''))}
+  y+=8;sec('LABORATORY');line('Acrylic: '+val('colour'));if(val('due'))line('Required by: '+fmt(val('due')));
+  if(val('instr')){y+=8;sec('INSTRUCTIONS');line(val('instr'))}
+  y+=14;r+=`<line x1="${X}" y1="${y+22}" x2="${Wd-24}" y2="${y+22}" stroke="#B9C7D2"/><text x="${X}" y="${y+38}" font-family="${F}" font-size="10" fill="#566F84">Signature</text>`;
+  const h=Math.max(126+boxH+20,y+60);
+  return{svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${Wd}" height="${h}" viewBox="0 0 ${Wd} ${h}"><rect width="${Wd}" height="${h}" fill="#fff"/>${r}</svg>`,w:Wd,h}}
+function pngBlob(){return new Promise((res,rej)=>{const{svg,w,h}=exportSVG(),img=new Image();
+  img.onload=()=>{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const x=c.getContext('2d');x.scale(2,2);x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);c.toBlob(b=>b?res(b):rej(new Error('Could not draw the image')),'image/png')};
+  img.onerror=()=>rej(new Error('Could not draw the image'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)})}
+
+/* ---------- UI ---------- */
+const $=id=>document.getElementById(id);
+let hintWarn=null,toastT;
+function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+function warn(m){hintWarn=m;renderHint()}
+const toolName=t=>{const a=TA();if(t.bname&&state.view==='both')return t.bname;return a==='lower'&&t.lname?t.lname:t.name};
+function renderHint(){const h=$('hint'),t=TOOLMAP[state.tool];h.className='hint'+(hintWarn?' warn':'');
+  if(hintWarn){h.textContent=hintWarn;return}
+  h.innerHTML=t.kind==='tooth'?`<b>${esc(toolName(t))}:</b> ${esc(t.hint)}${state.view==='both'?' Works on either arch.':''}`:`Choose a component on the left, then click teeth on the card.`}
+function renderTools(){const a=TA(),d=state.designs[a],U=a==='upper',groups=[...new Set(TOOLS.map(t=>t.g))];let h='';
+  if(state.view==='both')h+=`<div><h3>Whole-arch parts go on</h3><div class="seg" role="group" aria-label="Arch for whole-arch components"><button data-garch="upper" aria-pressed="${U}">Upper</button><button data-garch="lower" aria-pressed="${!U}">Lower</button></div></div>`;
+  for(const g of groups){const ts=TOOLS.filter(t=>t.g===g&&!(t.kind==='global'&&((t.upperOnly&&!U)||(t.lowerOnly&&U))));if(!ts.length)continue;
+    h+=`<div><h3>${g}</h3><div class="tgrid">`;
+    for(const t of ts){const on=t.kind==='global'&&d.comps.some(c=>c.type===t.id);
+      h+=`<button class="tool" data-tool="${t.id}" aria-pressed="${t.kind==='global'?on:state.tool===t.id}"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${t.icon}</svg><span>${esc(toolName(t))}</span>${on?'<span class="on">On</span>':''}</button>`}
+    h+=`</div></div>`}
+  const t=TOOLMAP[state.tool];
+  h+=`<div class="opts">${t.opt==='dir'?`<label for="optDir">Spring moves tooth<select id="optDir"><option value="distal">Distally</option><option value="mesial">Mesially</option></select></label>`:''}`+
+     `${t.opt==='move'?`<label for="optMove">Arrow direction<select id="optMove"><option value="labial">Labially</option><option value="palatal">Palatally / lingually</option><option value="mesial">Mesially</option><option value="distal">Distally</option></select></label>`:''}`+
+     `${t.opt==='gap'?`<label for="optGap">Gap size<select id="optGap">${[1,1.5,2,3,4,5,6,8].map(v=>`<option value="${v}">${v} mm</option>`).join('')}</select></label>`:''}`+
+     `${t.opt==='crowd'?`<label for="optLap">Overlap at the contact<select id="optLap">${[1,1.5,2,3,4].map(v=>`<option value="${v}">${v} mm</option>`).join('')}</select></label><label for="optPos">Tapped tooth<select id="optPos"><option value="line">Stays in line</option><option value="lab">Displaced labially / buccally</option><option value="pal">Displaced ${U?'palatally':'lingually'}</option><option value="ml">Rotated mesiolabially</option><option value="dl">Rotated distolabially</option></select></label>`:''}`+
+     `${(t.opt==='gap'||t.opt==='crowd')&&spacingCount()?`<button class="btn" id="spClear" type="button">Reset spacing and crowding (${spacingCount()})</button>`:''}`+
+     `<label class="check" style="flex-direction:row"><input type="checkbox" id="show8" ${state.show8?'checked':''}> Show third molars</label></div>`;
+  $('tools').innerHTML=h;
+  if($('optDir')){$('optDir').value=state.opts.dir;$('optDir').onchange=e=>state.opts.dir=e.target.value}
+  if($('optMove')){$('optMove').value=state.opts.move;$('optMove').onchange=e=>state.opts.move=e.target.value}
+  for(const[id,k]of[['optGap','gap'],['optLap','lap'],['optPos','pos']])if($(id)){$(id).value=String(state.opts[k]);$(id).onchange=e=>state.opts[k]=k==='pos'?e.target.value:+e.target.value}
+  if($('spClear'))$('spClear').onclick=()=>{snapshot();for(const a of archesShown()){state.designs[a].space={};state.designs[a].disp={}}toast('Spacing and crowding reset');render()};
+  $('show8').onchange=e=>{state.show8=e.target.checked;render()}}
+function compLabel(c,arch){const U=arch==='upper',t=TOOLMAP[c.type];
+  const name={pfs:U?'Palatal finger spring':'Lingual finger spring',baseplate:'Acrylic baseplate',block:'Bite blocks'}[c.type]||t.name;
+  let tag=c.tooth?(c.type==='ball'?`${dispId(c.tooth)}/${dispId(c.tooth+1)}`:String(dispId(c.tooth))):({southend:U?'11/21':'41/31',bow:U?'13–23':'43–33',capping:'33–43'}[c.type]||'');
+  if(c.dir)tag+=` · ${c.dir==='palatal'&&!U?'lingual':c.dir}`;return{name,tag}}
+function renderList(){const ul=$('dlist'),A=archesShown();let h='',n=0;
+  for(const a of A){const d=state.designs[a],vis=visible(d);
+    if(A.length>1)h+=`<li class="sub">${a==='upper'?'Upper':'Lower'}</li>`;
+    const rows=vis.map(c=>{const i=d.comps.indexOf(c),{name,tag}=compLabel(c,a);
+      let ctl='';
+      if(GAUGE[c.type])ctl=`<select class="mini" data-arch="${a}" data-gi="${i}" aria-label="Wire gauge for ${esc(name)} ${esc(tag)}">${gaugeOpts(c.type).map(g=>`<option value="${g}"${g===gOf(c)?' selected':''}>${g.includes('tube')?'0.5 tube':g+' mm'}</option>`).join('')}</select>`;
+      if(c.type==='block')ctl=`<select class="mini" data-arch="${a}" data-si="${i}" aria-label="Teeth covered by bite blocks">${SPANS[a].map(s=>`<option value="${s}"${s===spanOf(c,a)?' selected':''}>${s.replace('-L','–'+maxN()).replace('-','–')}</option>`).join('')}</select>`;
+      return`<li><span>${esc(name)}</span><span class="tag">${esc(tag)}</span>${ctl}<button aria-label="Remove ${esc(name)} ${esc(tag)}" data-arch="${a}" data-ci="${i}">×</button></li>`});
+    for(const[k,v]of Object.entries(d.space||{}))rows.push(`<li><span>${v>0?'Spacing':'Crowding'}</span><span class="tag">${k.split('|').map(x=>dispId(+x)).join('/')} · ${Math.abs(v)} mm</span><button aria-label="Remove ${v>0?'gap':'overlap'} ${k}" data-arch="${a}" data-sp="${k}">×</button></li>`);
+    for(const[i,v]of Object.entries(d.disp||{}))rows.push(`<li><span>Tooth out of line</span><span class="tag">${dispId(+i)} · ${v.rot?(v.rot>0?'mesiolabial':'distolabial'):(v.off<0?'labial':(a==='upper'?'palatal':'lingual'))}</span><button aria-label="Put ${dispId(+i)} back in line" data-arch="${a}" data-disp="${i}">×</button></li>`);
+    for(const id of Object.keys(d.prim||{}))rows.push(`<li><span>Primary tooth</span><span class="tag">${dispId(+id)}</span><button aria-label="Change ${dispId(+id)} back to the permanent tooth" data-arch="${a}" data-prim="${id}">×</button></li>`);
+    for(const[id,st]of Object.entries(d.teeth))if(id%10<=maxN())rows.push(`<li><span>${st==='extract'?'For extraction':'Missing tooth'}</span><span class="tag">${dispId(+id)}</span><button aria-label="Unmark tooth ${id}" data-arch="${a}" data-tooth="${id}">×</button></li>`);
+    n+=rows.length;h+=rows.join('')||`<li class="empty">Nothing on this arch yet.</li>`}
+  $('count').textContent=n?`${n} item${n>1?'s':''}`:'';ul.innerHTML=h}
+function render(){const v=state.view;
+  for(const[k,id]of[['upper','archU'],['lower','archL'],['both','archB']])$(id).setAttribute('aria-pressed',v===k);
+  const cm=cardMarkup(false),svg=$('card');svg.setAttribute('viewBox',cm.vb);svg.innerHTML=cm.body;svg.classList.toggle('tall',v==='both');
+  $('applName').textContent=applianceName();
+  $('paperMeta').textContent=`${v==='both'?'Upper and lower arches':v==='upper'?'Upper arch':'Lower arch'} · occlusal view · patient's right on the left`;
+  $('cb').hidden=!(v==='both'?hasBlock('upper')||hasBlock('lower'):hasBlock(v));
+  renderTools();renderList();renderHint();$('notes').textContent=notesText();
+  const U=TA()==='upper';
+  $('tpl').innerHTML='<option value="">Start from a template…</option>'+Object.entries(TPL).filter(([k,t])=>t.both||U||!t.upperOnly).map(([k,t])=>`<option value="${k}">${esc(t.name)}${!t.both&&v==='both'?(U?' (upper)':' (lower)'):''}</option>`).join('')}
+
+const POS={line:null,lab:{off:-2.5},pal:{off:2.5},ml:{rot:25},dl:{rot:-25}};
+function spacingCount(){return archesShown().reduce((n,a)=>{const d=state.designs[a];return n+Object.keys(d.space||{}).length+Object.keys(d.disp||{}).length},0)}
+function placeOnTooth(id,u=0){const arch=archOf(id),d=state.designs[arch],T=geo(arch).teeth[id],tool=state.tool,t=TOOLMAP[tool];if(t.kind!=='tooth')return;
+  if(!canPlace(tool,T,d)){const st=d.teeth[id];warn(st?`${dispId(id)} is marked ${st==='extract'?'for extraction':'missing'}. Unmark it first.`:t.bad);return}
+  snapshot();hintWarn=null;
+  if(tool==='space'||tool==='crowd'){const nb=nbId(id,u<0?'m':'d');if(!nb||nb%10>maxN()){hintWarn=`${dispId(id)} has no neighbour on that side.`;hist.pop();renderHint();return}
+    d.space=d.space||{};d.disp=d.disp||{};const k=ekey(id,nb),nm=`${dispId(Math.min(id,nb))}/${dispId(Math.max(id,nb))}`;
+    if(tool==='space'){const v=state.opts.gap;if(d.space[k]===v){delete d.space[k];toast(`${nm}: gap closed`)}else{d.space[k]=v;toast(`${nm}: ${v} mm gap`)}}
+    else{const v=-state.opts.lap,pz=POS[state.opts.pos],same=d.space[k]===v&&JSON.stringify(d.disp[id]||null)===JSON.stringify(pz);
+      if(same){delete d.space[k];delete d.disp[id];toast(`${nm}: crowding removed`)}else{d.space[k]=v;if(pz)d.disp[id]=pz;else delete d.disp[id];toast(`${nm}: ${-v} mm overlap`)}}}
+  else if(tool==='primary'){d.prim=d.prim||{};if(d.prim[id])delete d.prim[id];else{d.prim[id]=true;if(d.teeth[id]==='missing')delete d.teeth[id]}}
+  else if(tool==='extract'||tool==='missing'){if(d.teeth[id]===tool)delete d.teeth[id];else{d.teeth[id]=tool;if(tool==='missing')d.comps=d.comps.filter(c=>c.tooth!==id)}}
+  else{const dir=tool==='pfs'?state.opts.dir:tool==='arrow'?state.opts.move:undefined;
+    if(['pfs','z','bcr'].includes(tool))d.comps=d.comps.filter(c=>!(c.tooth===id&&['pfs','z','bcr'].includes(c.type)&&c.type!==tool));
+    if(tool==='adams'||tool==='delta')d.comps=d.comps.filter(c=>!(c.tooth===id&&c.type===(tool==='adams'?'delta':'adams')));
+    const i=d.comps.findIndex(c=>c.type===tool&&c.tooth===id);
+    if(i<0)d.comps.push(dir?{type:tool,tooth:id,dir}:{type:tool,tooth:id});
+    else if(dir&&d.comps[i].dir!==dir)d.comps[i].dir=dir;else d.comps.splice(i,1)}
+  render()}
+function toggleGlobal(type){const d=state.designs[TA()];snapshot();hintWarn=null;const i=d.comps.findIndex(c=>c.type===type);
+  if(i>=0)d.comps.splice(i,1);else{d.comps.push({type});if(type==='vfr')d.comps=d.comps.filter(c=>c.type!=='baseplate');if(type==='baseplate')d.comps=d.comps.filter(c=>c.type!=='vfr')}
+  render()}
+function setView(v){state.view=v;if(v!=='both')state.garch=v;hintWarn=null;render()}
+
+$('tools').addEventListener('click',e=>{const ga=e.target.closest('[data-garch]');if(ga){state.garch=ga.dataset.garch;render();return}
+  const b=e.target.closest('[data-tool]');if(!b)return;const t=TOOLMAP[b.dataset.tool];
+  if(t.kind==='global')toggleGlobal(t.id);else{state.tool=t.id;hintWarn=null;render()}});
+$('card').addEventListener('click',e=>{const g=e.target.closest('[data-tooth]');if(!g)return;let u=0;
+  try{const sv=$('card'),p=sv.createSVGPoint();p.x=e.clientX;p.y=e.clientY;u=p.matrixTransform(g.getScreenCTM().inverse()).x}catch(_){}
+  placeOnTooth(+g.dataset.tooth,u)});
+$('dlist').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=state.designs[b.dataset.arch];snapshot();
+  if(b.dataset.ci!==undefined)d.comps.splice(+b.dataset.ci,1);else if(b.dataset.prim)delete d.prim[b.dataset.prim];else if(b.dataset.sp)delete d.space[b.dataset.sp];else if(b.dataset.disp)delete d.disp[b.dataset.disp];else delete d.teeth[b.dataset.tooth];render()});
+$('dlist').addEventListener('change',e=>{const s=e.target;if(!s.matches('select'))return;const d=state.designs[s.dataset.arch];snapshot();
+  if(s.dataset.gi!==undefined){const c=d.comps[+s.dataset.gi];if(s.value===gDef(c))delete c.g;else c.g=s.value}
+  else if(s.dataset.si!==undefined)d.comps[+s.dataset.si].span=s.value;render()});
+$('archU').onclick=()=>setView('upper');$('archL').onclick=()=>setView('lower');$('archB').onclick=()=>setView('both');
+$('tpl').onchange=e=>{const k=e.target.value;if(!k)return;const t=TPL[k];snapshot();
+  if(t.both){state.designs.upper=build(t.upper,null,'upper');state.designs.lower=build(t.lower,null,'lower');state.view='both'}
+  else state.designs[TA()]=fromTpl(k,TA());
+  toast(`Loaded: ${t.name}`);render()};
+$('clear').onclick=()=>{snapshot();for(const a of archesShown())state.designs[a]={comps:[],teeth:{},prim:{},space:{},disp:{}};toast('Card cleared. Undo restores it.');render()};
+function undo(){const s=hist.pop();if(!s){toast('Nothing to undo');return}const o=JSON.parse(s);state.designs=o.d;state.view=o.v;state.garch=o.g;hintWarn=null;render()}
+$('undo').onclick=undo;
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){e.preventDefault();undo()}});
+['pname','pnum','clin','date','due','colour','instr','cbProt','cbOpen','cbCentre'].forEach(id=>$(id).addEventListener('input',()=>$('notes').textContent=notesText()));
+$('colour').addEventListener('change',()=>render());
+async function openPreview(){try{const b=await pngBlob();$('pimg').src=URL.createObjectURL(b);$('modal').hidden=false;$('closeModal').focus()}catch(e){toast(e.message)}}
+$('preview').onclick=openPreview;
+$('closeModal').onclick=()=>$('modal').hidden=true;
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal')$('modal').hidden=true});
+$('copyImg').onclick=async()=>{try{if(!window.ClipboardItem)throw 0;await navigator.clipboard.write([new ClipboardItem({'image/png':pngBlob()})]);toast('Card image copied. Paste it into the notes.')}catch(e){openPreview()}};
+$('copyNotes').onclick=async()=>{const t=notesText();try{await navigator.clipboard.writeText(t);toast('Notes text copied')}catch(e){const r=document.createRange();r.selectNodeContents($('notes'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Text selected. Press Ctrl+C to copy.')}};
+$('date').value=new Date().toISOString().slice(0,10);
+render();
+</script>
+
+</body>
+</html>
