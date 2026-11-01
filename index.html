@@ -162,8 +162,6 @@ pre.notes{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--
     <div>
       <h3>Prescription</h3>
       <div class="fields">
-        <div class="field full"><label for="pname">Patient name</label><input id="pname" autocomplete="off"></div>
-        <div class="field"><label for="pnum">CHI / hospital no.</label><input id="pnum" autocomplete="off" inputmode="numeric"></div>
         <div class="field"><label for="clin">Clinician</label><input id="clin" autocomplete="off"></div>
         <div class="field"><label for="date">Date</label><input id="date" type="date"></div>
         <div class="field"><label for="due">Required by</label><input id="due" type="date"></div>
@@ -186,7 +184,7 @@ pre.notes{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--
     <div>
       <div class="row"><h3>Text for the notes</h3><button id="copyNotes" class="btn">Copy text</button></div>
       <pre class="notes" id="notes"></pre>
-      <p class="small" style="margin:6px 0 0">Patient details go on the card image only, not in this text. Nothing you type is saved when you close the page.</p>
+      <p class="small" style="margin:6px 0 0">Nothing you type is saved when you close the page. Don't add patient names, CHI or hospital numbers anywhere on this card.</p>
     </div>
   </aside>
 </main>
@@ -477,7 +475,7 @@ function exportSVG(){const Wd=820,F='Arial,Helvetica,sans-serif',cm=cardMarkup(t
   let r=`<rect width="${Wd}" height="62" fill="#0B2E4A"/><text x="24" y="39" font-family="Georgia,'Times New Roman',serif" font-size="21" fill="#fff">Orthodontic appliance prescription</text>`+
     `<text x="${Wd-24}" y="39" text-anchor="end" font-family="${F}" font-size="13.5" font-weight="700" fill="#7FD0C7">${esc(applianceName())}</text>`+
     `<rect y="62" width="${Wd}" height="50" fill="#F1F5F8"/>`;
-  const fields=[['PATIENT',val('pname')||'—',24],['CHI / HOSPITAL NO.',val('pnum')||'—',300],['DATE',fmt(val('date'))||'—',490],['CLINICIAN',val('clin')||'—',610]];
+  const fields=[['DATE',fmt(val('date'))||'—',24],['REQUIRED BY',fmt(val('due'))||'—',200],['CLINICIAN',val('clin')||'—',376]];
   for(const[k,v,x]of fields)r+=`<text x="${x}" y="80" font-family="${F}" font-size="9" letter-spacing="1" fill="#566F84">${k}</text><text x="${x}" y="99" font-family="${F}" font-size="14" font-weight="700" fill="#0B2E4A">${esc(v)}</text>`;
   r+=`<rect x="8" y="126" width="428" height="${boxH}" rx="6" fill="#fff" stroke="#D2DDE5"/><svg x="8" y="132" width="428" height="${cm.h}" viewBox="${cm.vb}">${cm.body}</svg>`;
   const ly=132+cm.h+26;r+=`<line x1="30" y1="${ly}" x2="48" y2="${ly}" stroke="${WIRE}" stroke-width="2.5"/><text x="54" y="${ly+4}" font-family="${F}" font-size="11" fill="#566F84">Wire</text>`+
@@ -601,7 +599,7 @@ $('clear').onclick=()=>{snapshot();for(const a of archesShown())state.designs[a]
 function undo(){const s=hist.pop();if(!s){toast('Nothing to undo');return}const o=JSON.parse(s);state.designs=o.d;state.view=o.v;state.garch=o.g;hintWarn=null;render()}
 $('undo').onclick=undo;
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){e.preventDefault();undo()}});
-['pname','pnum','clin','date','due','colour','instr','cbProt','cbOpen','cbCentre'].forEach(id=>$(id).addEventListener('input',()=>$('notes').textContent=notesText()));
+['clin','date','due','colour','instr','cbProt','cbOpen','cbCentre'].forEach(id=>$(id).addEventListener('input',()=>$('notes').textContent=notesText()));
 $('colour').addEventListener('change',()=>render());
 async function openPreview(){try{const b=await pngBlob();$('pimg').src=URL.createObjectURL(b);$('modal').hidden=false;$('closeModal').focus()}catch(e){toast(e.message)}}
 $('preview').onclick=openPreview;
